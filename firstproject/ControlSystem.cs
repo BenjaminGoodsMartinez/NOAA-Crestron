@@ -5,15 +5,42 @@ using Crestron.SimplSharpPro.CrestronThread;        	// For Threading
 using Crestron.SimplSharpPro.Diagnostics;		    	// For System Monitor Access
 using Crestron.SimplSharpPro.DeviceSupport;
 using Crestron.SimplSharpPro.UI;
-using firstproject.Properties; // For Generic Device Support
+using firstproject.Properties;
+using Crestron.SimplSharpPro.DM.Streaming;
+using Crestron.SimplSharpPro.AudioDistribution;
+using Crestron.SimplSharpPro.EthernetCommunication;
+using Independentsoft.Exchange.Autodiscover; // For Generic Device Support
 
 namespace firstCrestronProject
 {
     public class ControlSystem : CrestronControlSystem
     {
+        private EthernetIntersystemCommunications myEISC;
         private Tsw1070 _touchpanel;
         private UserInterface _userInterface;
+        private ControlSystem _controlSystem;
         private const uint touchpanelID = 0x03;
+        private DmNvxE30 e30Transmitter_MCR_Lecturn; //tx
+        private DmNvxE30 e30Transmitter_MCR_PTZ_1; //tx
+        private DmNvxE30 e30Transmitter_MCR_PTZ_2; //tx
+        private DmNvxE30 e30Transmitter_MCR_PTZ_3; //tx
+        private DmNvxE30 e30Transmitter_Briefing_1; //tx
+        private DmNvxE30 e30Transmitter_Briefing_Camera; //tx
+        
+        
+        
+        private DmNvxE30 e30Receiver_VideoWall_1; //rx
+        private DmNvxE30 e30Receiver_VideoWall_2; //rx
+        private DmNvxE30 e30Receiver_VideoWall_3; //rx
+        private DmNvxE30 e30Receiver_VideoWall_4; //rx
+        private DmNvxE30 e30Receiver_MCR_DualDisplay_1; //rx
+        private DmNvxE30 e30Receiver_MCR_DualDisplay_2; //rx
+        private DmNvxE30 e30Receiver_Briefing_DualDisplay_1; //rx
+        private DmNvxE30 e30Receiver_Briefing_DualDisplay_2; //rx
+        private DmNvxE30 e30Receiver_Briefing_Confidence_Monitor; //rx
+
+        private DmNax8Zsa NaxAmp;
+
         
         /// <summary>
         /// ControlSystem Constructor. Starting point for the SIMPL#Pro program.
@@ -44,6 +71,24 @@ namespace firstCrestronProject
                 CrestronEnvironment.EthernetEventHandler += new EthernetEventHandler(_ControllerEthernetEventHandler);
 
                 _touchpanel = new Tsw1070(touchpanelID, this);
+                e30Receiver_VideoWall_1 = new DmNvxE30(0x03, this);
+                _touchpanel.OnlineStatusChange += TouchpanelOnOnlineStatusChange;
+
+                void TouchpanelOnOnlineStatusChange(GenericBase currentdevice, OnlineOfflineEventArgs args)
+                {
+                    if (currentdevice == _touchpanel)
+                    {
+                        if (args.DeviceOnLine)
+                        {
+                            ErrorLog.Notice(("Touch panel is online"));
+                        }
+                        else
+                        {
+                            ErrorLog.Error("Touch Panel is online");
+                        }
+                    }
+                }
+
                 _touchpanel.Description = "Main 10in touch panel";
 
                 if (_touchpanel.Register() != eDeviceRegistrationUnRegistrationResponse.Success)
@@ -52,10 +97,39 @@ namespace firstCrestronProject
                     CrestronConsole.PrintLine(("There was an error registering the touch panel."));
                 }
                 
-                _userInterface = new UserInterface();
-                _userInterface.DigitalChanged += UserInterfaceOnDigitalChanged;
-                _userInterface.AnalogChanged += UserInterfaceOnAnalogChanged;
-                _userInterface.SerialChanged += UserInterfaceOnSerialChanged;
+               _touchpanel.SigChange += TouchpanelOnSigChange;
+
+               void TouchpanelOnSigChange(BasicTriList currentdevice, SigEventArgs args)
+               {
+                   if (currentdevice == _touchpanel)
+                   {
+                       switch (args.Sig.Type)
+                       {
+                           case eSigType.NA:
+                               break;
+                           case eSigType.Bool:
+                           {
+                               if (args.Sig.Number == 10)
+                               {
+                                   if (args.Sig.BoolValue == true)
+                                   {
+                                       _touchpanel.BooleanInput[20].BoolValue = true;
+                                   }
+
+                                   if (args.Sig.BoolValue == false)
+                                   {
+                                       _touchpanel.BooleanInput[20].BoolValue = false;
+                                   }
+                               }
+                           }
+                               break;
+                           case eSigType.UShort:
+                               break;   
+                           case eSigType.String:
+                               break;
+                       }
+                   }
+               }
 
                 _touchpanel.SigChange += _userInterface.InterfaceSigChange;
             }
@@ -65,27 +139,6 @@ namespace firstCrestronProject
             }
         }
 
-        private void UserInterfaceOnSerialChanged(uint deviceid, SigEventArgs args)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void UserInterfaceOnAnalogChanged(uint deviceid, SigEventArgs args)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void UserInterfaceOnDigitalChanged(uint deviceid, SigEventArgs args)
-        {
-            switch (deviceid)
-            {
-                case touchpanelID:
-                {
-                    // tpHandlerDigital(args);
-                    break;
-                }
-            }
-        }
 
 
 
@@ -106,7 +159,23 @@ namespace firstCrestronProject
         {
             try
             {
-                CrestronConsole.PrintLine("Hello Crestron");
+                CrestronConsole.PrintLine("NASA AV System Initializing...");
+                // this.RelayPorts[1]
+                //Change IP address
+                myEISC = new EthernetIntersystemCommunications(0x12, "172.16.0.0", this);
+                if (myEISC.Register() != eDeviceRegistrationUnRegistrationResponse.Success)
+                {
+                    CrestronConsole.PrintLine("Error message");
+                }
+                else
+                {
+                    myEISC.SigChange += myEISC_SigChange;
+                    myEISC.OnlineStatusChange += MyEISCOnOnlineStatusChange;
+
+
+                    myEISC.Register();
+                }
+
             }
             catch (Exception e)
             {
@@ -114,6 +183,29 @@ namespace firstCrestronProject
             }
         }
 
+        private void myEISC_SigChange(BasicTriList currentdevice, SigEventArgs args)
+        {
+            switch (args.Sig.Type)
+            {
+                case eSigType.Bool:
+                    myEISC.BooleanInput[args.Sig.Number].BoolValue = args.Sig.BoolValue;
+                    break;
+                case eSigType.UShort:
+                    myEISC.UShortInput[args.Sig.Number].UShortValue = args.Sig.UShortValue;
+                    break;
+                case eSigType.String:
+                    myEISC.StringInput[args.Sig.Number].StringValue = args.Sig.StringValue;
+                    break;
+                case eSigType.NA:
+                    break;
+            }
+        }
+
+
+        private void MyEISCOnOnlineStatusChange(GenericBase currentdevice, OnlineOfflineEventArgs args)
+        {
+            throw new NotImplementedException();
+        }
         /// <summary>
         /// Event Handler for Ethernet events: Link Up and Link Down. 
         /// Use these events to close / re-open sockets, etc. 
