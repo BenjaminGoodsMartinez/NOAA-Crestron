@@ -9,7 +9,7 @@ using firstproject.Properties;
 using Crestron.SimplSharpPro.DM.Streaming;
 using Crestron.SimplSharpPro.AudioDistribution;
 using Crestron.SimplSharpPro.EthernetCommunication;
-using Independentsoft.Exchange.Autodiscover; // For Generic Device Support
+
 
 
 namespace firstCrestronProject
@@ -19,7 +19,6 @@ namespace firstCrestronProject
         private EthernetIntersystemCommunications myEISC;
         private Tsw1070 _touchpanel;
         private UserInterface _userInterface;
-            private List<Touchpanel> touchpanels = new List<Touchpanel>();
         private const uint touchpanelID = 0x03;
         private DmNvxE30 e30Transmitter_MCR_Lecturn; //tx
         private DmNvxE30 e30Transmitter_MCR_PTZ_1; //tx
@@ -41,7 +40,7 @@ namespace firstCrestronProject
         private DmNvxE30 e30Receiver_Briefing_Confidence_Monitor; //rx
 
 
-        private DmNax8Zsa NaxAmp;
+        private DmNax16ain MCR_Amplifier;
         
 
         

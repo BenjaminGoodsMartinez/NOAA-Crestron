@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "dgSpecHash": "2dapyZrXPrc=",
+  "success": true,
+  "projectFilePath": "/workspaces/NOAA-Crestron/firstproject/firstproject.csproj",
+  "expectedPackageFiles": [
+    "/home/codespace/.nuget/packages/crestron.simplsharp.sdk.library/2.21.171/crestron.simplsharp.sdk.library.2.21.171.nupkg.sha512",
+    "/home/codespace/.nuget/packages/crestron.simplsharp.sdk.program/2.21.171/crestron.simplsharp.sdk.program.2.21.171.nupkg.sha512",
+    "/home/codespace/.nuget/packages/crestron.simplsharp.sdk.programlibrary/2.21.171/crestron.simplsharp.sdk.programlibrary.2.21.171.nupkg.sha512",
+    "/home/codespace/.nuget/packages/microsoft.netframework.referenceassemblies.net48/1.0.3/microsoft.netframework.referenceassemblies.net48.1.0.3.nupkg.sha512"
+  ],
+  "logs": []
+}
