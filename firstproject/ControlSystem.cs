@@ -9,7 +9,10 @@ using firstproject.Properties;
 using Crestron.SimplSharpPro.DM.Streaming;
 using Crestron.SimplSharpPro.AudioDistribution;
 using Crestron.SimplSharpPro.EthernetCommunication;
-
+using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.IO;
+using System.Security.Cryptography.X509Certificates;
 
 
 namespace firstCrestronProject
@@ -24,8 +27,10 @@ namespace firstCrestronProject
         private DmNvxE30 e30Transmitter_MCR_PTZ_1; //tx
         private DmNvxE30 e30Transmitter_MCR_PTZ_2; //tx
         private DmNvxE30 e30Transmitter_MCR_PTZ_3; //tx
-        private DmNvxE30 e30Transmitter_Briefing_1; //tx
-        private DmNvxE30 e30Transmitter_Briefing_Camera; //tx
+        
+
+        // private DmNvxE30 e30Transmitter_Briefing_1; //tx
+        // private DmNvxE30 e30Transmitter_Briefing_Camera; //tx
         
         
         
@@ -35,15 +40,18 @@ namespace firstCrestronProject
         private DmNvxE30 e30Receiver_VideoWall_4; //rx
         private DmNvxE30 e30Receiver_MCR_DualDisplay_1; //rx
         private DmNvxE30 e30Receiver_MCR_DualDisplay_2; //rx
-        private DmNvxE30 e30Receiver_Briefing_DualDisplay_1; //rx
-        private DmNvxE30 e30Receiver_Briefing_DualDisplay_2; //rx
-        private DmNvxE30 e30Receiver_Briefing_Confidence_Monitor; //rx
+
+    
+        // private DmNvxE30 e30Receiver_Briefing_DualDisplay_1; //rx
+        // private DmNvxE30 e30Receiver_Briefing_DualDisplay_2; //rx
+        // private DmNvxE30 e30Receiver_Briefing_Confidence_Monitor; //rx
 
 
         private DmNax16ain MCR_Amplifier;
+        string JSONDataAsAString = "";
+        string configfilepath = "./Config.json";
         
 
-        
         /// <summary>
         /// ControlSystem Constructor. Starting point for the SIMPL#Pro program.
         /// Use the constructor to:
@@ -72,8 +80,7 @@ namespace firstCrestronProject
                 CrestronEnvironment.ProgramStatusEventHandler += new ProgramStatusEventHandler(_ControllerProgramEventHandler);
                 CrestronEnvironment.EthernetEventHandler += new EthernetEventHandler(_ControllerEthernetEventHandler);
 
-                _touchpanel = new Tsw1070(touchpanelID, this);
-                e30Receiver_VideoWall_1 = new DmNvxE30(0x03, this);
+
                 _touchpanel.OnlineStatusChange += TouchpanelOnOnlineStatusChange;
 
                 void TouchpanelOnOnlineStatusChange(GenericBase currentdevice, OnlineOfflineEventArgs args)
@@ -142,6 +149,20 @@ namespace firstCrestronProject
         }
 
 
+        public void LoadJsonConfig(string args)
+        {
+          
+            try
+            {
+                using (StreamReader sr = new StreamReader(configfilepath, System.Text.Encoding.Default))
+                    JSONDataAsAString = sr.ReadToEnd();
+                Console.WriteLine("JSON data read = {0}", JSONDataAsAString);
+            } catch (Exception e)
+            {
+                Console.WriteLine("Error reading JSON data. Error {0}", e.Message);
+            }
+        }
+
 
 
         /// <summary>
@@ -159,11 +180,15 @@ namespace firstCrestronProject
         /// </summary>
         public override void InitializeSystem()
         {
+
+
             try
             {
                 CrestronConsole.PrintLine("NASA AV System Initializing...");
                 // this.RelayPorts[1]
                 //Change IP address
+                
+                
                 myEISC = new EthernetIntersystemCommunications(0x12, "172.16.0.0", this);
                 if (myEISC.Register() != eDeviceRegistrationUnRegistrationResponse.Success)
                 {
@@ -177,6 +202,9 @@ namespace firstCrestronProject
 
                     myEISC.Register();
                 }
+
+
+
 
             }
             catch (Exception e)

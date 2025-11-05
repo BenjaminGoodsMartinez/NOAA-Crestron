@@ -116,6 +116,61 @@
 
 
 ],
+  "receivers": [
+    {
+    "hardware": "crestron",
+    "address": "192.168.2.79",
+    "ipid": 32,
+    "name": "VideoWall_1",
+    "make": "Crestron",
+    "model": "nvxe30",
+    "avisplTag": "RX-01"
+  },
+   {
+    "hardware": "crestron",
+    "address": "192.168.2.79",
+    "ipid": 33,
+    "name": "Videowall_2",
+    "make": "Crestron",
+    "model": "nvxe30",
+    "avisplTag": "RX-02"
+  },
+   {
+    "hardware": "crestron",
+    "address": "192.168.2.79",
+    "ipid": 34,
+    "name": "Videowall_3",
+    "make": "Crestron",
+    "model": "nvxe30",
+    "avisplTag": "RX-03"
+  },
+   {
+    "hardware": "crestron",
+    "address": "192.168.2.79",
+    "ipid": 35,
+    "name": "Videowall_4",
+    "make": "Crestron",
+    "model": "nvxe30",
+    "avisplTag": "RX-04"
+  },{
+    "hardware": "crestron",
+    "address": "192.168.2.79",
+    "ipid": 36,
+    "name": "MCR_DualDisplay_1",
+    "make": "Crestron",
+    "model": "nvxe30",
+    "avisplTag": "RX-05"
+  },
+   {
+    "hardware": "crestron",
+    "address": "192.168.2.79",
+    "ipid": 37,
+    "name": "MCR_DualDisplay_2",
+    "make": "Crestron",
+    "model": "nvxe30",
+    "avisplTag": "RX-06"
+  }
+],
   "vtcModes": [
     {
       "label": "Schedule",
