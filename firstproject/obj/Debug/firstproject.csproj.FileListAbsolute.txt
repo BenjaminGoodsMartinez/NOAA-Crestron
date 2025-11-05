@@ -1,6 +1,6 @@
-/workspaces/NOAA-Crestron/firstproject/bin/Debug/firstproject.dll
-/workspaces/NOAA-Crestron/firstproject/bin/Debug/firstproject.pdb
 /workspaces/NOAA-Crestron/firstproject/obj/Debug/firstproject.csproj.AssemblyReference.cache
 /workspaces/NOAA-Crestron/firstproject/obj/Debug/firstproject.csproj.CoreCompileInputs.cache
+/workspaces/NOAA-Crestron/firstproject/bin/Debug/firstproject.dll
+/workspaces/NOAA-Crestron/firstproject/bin/Debug/firstproject.pdb
 /workspaces/NOAA-Crestron/firstproject/obj/Debug/firstproject.dll
 /workspaces/NOAA-Crestron/firstproject/obj/Debug/firstproject.pdb

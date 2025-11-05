@@ -1,11 +1,16 @@
 using System;
+using System.Text;
 using Crestron.SimplSharp;                          	// For Basic SIMPL# Classes
 using Crestron.SimplSharpPro;                       	// For Basic SIMPL#Pro classes
 using Crestron.SimplSharpPro.CrestronThread;        	// For Threading
-using Crestron.SimplSharpPro.Diagnostics;		    	// For System Monitor Access
+using Crestron.SimplSharp.CrestronSockets;	    	// For System Monitor Access
 using Crestron.SimplSharpPro.DeviceSupport;
 using Crestron.SimplSharpPro.UI;
 using firstproject.Properties;
+using firstproject;
+using firstCrestronProject;
+using firstproject.Config;
+using firstproject.Display;
 using Crestron.SimplSharpPro.DM.Streaming;
 using Crestron.SimplSharpPro.AudioDistribution;
 using Crestron.SimplSharpPro.EthernetCommunication;
@@ -23,56 +28,24 @@ namespace firstCrestronProject
         private Tsw1070 _touchpanel;
         private UserInterface _userInterface;
         private const uint touchpanelID = 0x03;
-        private DmNvxE30 e30Transmitter_MCR_Lecturn; //tx
-        private DmNvxE30 e30Transmitter_MCR_PTZ_1; //tx
-        private DmNvxE30 e30Transmitter_MCR_PTZ_2; //tx
-        private DmNvxE30 e30Transmitter_MCR_PTZ_3; //tx
-        
-
-        // private DmNvxE30 e30Transmitter_Briefing_1; //tx
-        // private DmNvxE30 e30Transmitter_Briefing_Camera; //tx
-        
-        
-        
-        private DmNvxE30 e30Receiver_VideoWall_1; //rx
-        private DmNvxE30 e30Receiver_VideoWall_2; //rx
-        private DmNvxE30 e30Receiver_VideoWall_3; //rx
-        private DmNvxE30 e30Receiver_VideoWall_4; //rx
-        private DmNvxE30 e30Receiver_MCR_DualDisplay_1; //rx
-        private DmNvxE30 e30Receiver_MCR_DualDisplay_2; //rx
-
-    
-        // private DmNvxE30 e30Receiver_Briefing_DualDisplay_1; //rx
-        // private DmNvxE30 e30Receiver_Briefing_DualDisplay_2; //rx
-        // private DmNvxE30 e30Receiver_Briefing_Confidence_Monitor; //rx
 
 
         private DmNax16ain MCR_Amplifier;
         string JSONDataAsAString = "";
         string configfilepath = "./Config.json";
-        
 
-        /// <summary>
-        /// ControlSystem Constructor. Starting point for the SIMPL#Pro program.
-        /// Use the constructor to:
-        /// * Initialize the maximum number of threads (max = 400)
-        /// * Register devices
-        /// * Register event handlers
-        /// * Add Console Commands
-        /// 
-        /// Please be aware that the constructor needs to exit quickly; if it doesn't
-        /// exit in time, the SIMPL#Pro program will exit.
-        /// 
-        /// You cannot send / receive data in the constructor
-        /// </summary>
+        private List<Displays> displays = new List<Displays>();
+
+
+
         public ControlSystem()
             : base()
         {
+
             try
             {
-                
-                CrestronConsole.PrintLine("Constructor is working!");
-                
+
+
                 Thread.MaxNumberOfUserThreads = 20;
 
                 //Subscribe to the controller events (System, Program, and Ethernet)
@@ -93,52 +66,52 @@ namespace firstCrestronProject
                         }
                         else
                         {
-                            ErrorLog.Error("Touch Panel is online");
+                            ErrorLog.Error("Touch Panel is offline");
                         }
                     }
                 }
 
-                _touchpanel.Description = "Main 10in touch panel";
+                _touchpanel.Description = "Mission Control Room Touch Panel";
 
                 if (_touchpanel.Register() != eDeviceRegistrationUnRegistrationResponse.Success)
                 {
                     ErrorLog.Error("Error message");
                     CrestronConsole.PrintLine(("There was an error registering the touch panel."));
                 }
-                
-               _touchpanel.SigChange += TouchpanelOnSigChange;
 
-               void TouchpanelOnSigChange(BasicTriList currentdevice, SigEventArgs args)
-               {
-                   if (currentdevice == _touchpanel)
-                   {
-                       switch (args.Sig.Type)
-                       {
-                           case eSigType.NA:
-                               break;
-                           case eSigType.Bool:
-                           {
-                               if (args.Sig.Number == 10)
-                               {
-                                   if (args.Sig.BoolValue == true)
-                                   {
-                                       _touchpanel.BooleanInput[20].BoolValue = true;
-                                   }
+                _touchpanel.SigChange += TouchpanelOnSigChange;
 
-                                   if (args.Sig.BoolValue == false)
-                                   {
-                                       _touchpanel.BooleanInput[20].BoolValue = false;
-                                   }
-                               }
-                           }
-                               break;
-                           case eSigType.UShort:
-                               break;   
-                           case eSigType.String:
-                               break;
-                       }
-                   }
-               }
+                void TouchpanelOnSigChange(BasicTriList currentdevice, SigEventArgs args)
+                {
+                    if (currentdevice == _touchpanel)
+                    {
+                        switch (args.Sig.Type)
+                        {
+                            case eSigType.NA:
+                                break;
+                            case eSigType.Bool:
+                                {
+                                    if (args.Sig.Number == 10)
+                                    {
+                                        if (args.Sig.BoolValue == true)
+                                        {
+                                            _touchpanel.BooleanInput[20].BoolValue = true;
+                                        }
+
+                                        if (args.Sig.BoolValue == false)
+                                        {
+                                            _touchpanel.BooleanInput[20].BoolValue = false;
+                                        }
+                                    }
+                                }
+                                break;
+                            case eSigType.UShort:
+                                break;
+                            case eSigType.String:
+                                break;
+                        }
+                    }
+                }
 
                 _touchpanel.SigChange += _userInterface.InterfaceSigChange;
             }
@@ -149,19 +122,56 @@ namespace firstCrestronProject
         }
 
 
-        public void LoadJsonConfig(string args)
+
+        private void InitializeDisplays()
         {
-          
+            DisplayConfig config = new DisplayConfig();
+            Displays displays = new Displays(config);
+
+
+        }
+
+
+        void AccessData(string args)
+        {
+            DisplayConfig config = new DisplayConfig();
+
+            Displays display2 = new Displays(config);
+
+            string[] arrayArgs = args.Split(' ');
+            string roomTarget = arrayArgs[0];
+            int roomIndex = -1;
+
+
+
+
+
+        }
+
+
+        void LoadJsonConfig(string args)
+        {
+
             try
             {
-                using (StreamReader sr = new StreamReader(configfilepath, System.Text.Encoding.Default))
-                    JSONDataAsAString = sr.ReadToEnd();
-                Console.WriteLine("JSON data read = {0}", JSONDataAsAString);
-            } catch (Exception e)
+
+                SystemConfig config = default;
+
+                // using (StreamReader sr = new StreamReader(configfilepath, System.Text.Encoding.Default))
+                // JSONDataAsAString = sr.ReadToEnd();
+
+                // Console.WriteLine("JSON data read = {0}", JSONDataAsAString);
+            }
+            catch (Exception e)
             {
                 Console.WriteLine("Error reading JSON data. Error {0}", e.Message);
             }
         }
+
+    
+
+
+  
 
 
 
@@ -188,7 +198,9 @@ namespace firstCrestronProject
                 // this.RelayPorts[1]
                 //Change IP address
                 
-                
+
+
+
                 myEISC = new EthernetIntersystemCommunications(0x12, "172.16.0.0", this);
                 if (myEISC.Register() != eDeviceRegistrationUnRegistrationResponse.Success)
                 {
@@ -202,9 +214,6 @@ namespace firstCrestronProject
 
                     myEISC.Register();
                 }
-
-
-
 
             }
             catch (Exception e)

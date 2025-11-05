@@ -55,6 +55,15 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="tpHandler.cs" />
     <Compile Include="UserInterface.cs" />
+    <Compile Include="Display\Displays.cs"/>
+    <Compile Include="Decoders\Decoders.cs" />
+    <Compile Include="Encoders\Encoders.cs" />
+    <Compile Include="Config\CodecConfig.cs" />
+    <Compile Include="Config\DecoderConfig.cs" />
+    <Compile Include="Config\EncoderConfig.cs" />
+    <Compile Include="Config\DisplayConfig.cs" />
+    <Compile Include="Config\SystemConfig.cs" />
+
   </ItemGroup>
 
   <ItemGroup>

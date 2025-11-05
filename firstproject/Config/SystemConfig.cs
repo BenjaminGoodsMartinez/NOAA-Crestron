@@ -7,6 +7,6 @@ namespace firstproject.Config
 {
     public class SystemConfig
     {
-        
+        public List<DisplayConfig> Displays { get; set; }
     }
 }
