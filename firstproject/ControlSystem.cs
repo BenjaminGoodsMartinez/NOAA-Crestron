@@ -18,6 +18,8 @@ using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
+using System.Diagnostics;
 
 
 namespace firstCrestronProject
@@ -29,12 +31,17 @@ namespace firstCrestronProject
         private UserInterface _userInterface;
         private const uint touchpanelID = 0x03;
 
+        private bool isTouchPanelRegistered = default;
+        private bool isTouchPanelOnline = default;
 
         private DmNax16ain MCR_Amplifier;
         string JSONDataAsAString = "";
         string configfilepath = "./Config.json";
 
         private List<Displays> displays = new List<Displays>();
+        //Display Commands
+        private string Bravia_DisplayOn = "8C 00 00 02 01 8F";
+        private string Bravia_DisplayOff = "8C 00 00 02 01 8E";
 
 
 
@@ -46,7 +53,7 @@ namespace firstCrestronProject
             {
 
 
-                Thread.MaxNumberOfUserThreads = 20;
+                Crestron.SimplSharpPro.CrestronThread.Thread.MaxNumberOfUserThreads = 20;
 
                 //Subscribe to the controller events (System, Program, and Ethernet)
                 CrestronEnvironment.SystemEventHandler += new SystemEventHandler(_ControllerSystemEventHandler);
@@ -54,66 +61,7 @@ namespace firstCrestronProject
                 CrestronEnvironment.EthernetEventHandler += new EthernetEventHandler(_ControllerEthernetEventHandler);
 
 
-                _touchpanel.OnlineStatusChange += TouchpanelOnOnlineStatusChange;
 
-                void TouchpanelOnOnlineStatusChange(GenericBase currentdevice, OnlineOfflineEventArgs args)
-                {
-                    if (currentdevice == _touchpanel)
-                    {
-                        if (args.DeviceOnLine)
-                        {
-                            ErrorLog.Notice(("Touch panel is online"));
-                        }
-                        else
-                        {
-                            ErrorLog.Error("Touch Panel is offline");
-                        }
-                    }
-                }
-
-                _touchpanel.Description = "Mission Control Room Touch Panel";
-
-                if (_touchpanel.Register() != eDeviceRegistrationUnRegistrationResponse.Success)
-                {
-                    ErrorLog.Error("Error message");
-                    CrestronConsole.PrintLine(("There was an error registering the touch panel."));
-                }
-
-                _touchpanel.SigChange += TouchpanelOnSigChange;
-
-                void TouchpanelOnSigChange(BasicTriList currentdevice, SigEventArgs args)
-                {
-                    if (currentdevice == _touchpanel)
-                    {
-                        switch (args.Sig.Type)
-                        {
-                            case eSigType.NA:
-                                break;
-                            case eSigType.Bool:
-                                {
-                                    if (args.Sig.Number == 10)
-                                    {
-                                        if (args.Sig.BoolValue == true)
-                                        {
-                                            _touchpanel.BooleanInput[20].BoolValue = true;
-                                        }
-
-                                        if (args.Sig.BoolValue == false)
-                                        {
-                                            _touchpanel.BooleanInput[20].BoolValue = false;
-                                        }
-                                    }
-                                }
-                                break;
-                            case eSigType.UShort:
-                                break;
-                            case eSigType.String:
-                                break;
-                        }
-                    }
-                }
-
-                _touchpanel.SigChange += _userInterface.InterfaceSigChange;
             }
             catch (Exception e)
             {
@@ -123,49 +71,80 @@ namespace firstCrestronProject
 
 
 
-        private void InitializeDisplays()
+        private void initializeUI ()
         {
-            DisplayConfig config = new DisplayConfig();
-            Displays displays = new Displays(config);
+
+            //Check if registered and online
+            _touchpanel = new Tsw1070(touchpanelID, this);
+
+            if (_touchpanel.Register() == eDeviceRegistrationUnRegistrationResponse.Success && _touchpanel.IsOnline)
+            {
+                isTouchPanelRegistered = true;
+                isTouchPanelOnline = true;
+                _touchpanel.Description = "Mission Control Room Touch Panel";
+
+                Console.WriteLine("Mission Control Room Touch Panel is registered and online!\nInitializing Touch Panel Functions...");
+            } else
+            {
+                Console.WriteLine("There was an issue initializing touch panel");
+            }
+
+            //Begin to create button/function mappings
+            
+            if (isTouchPanelOnline && isTouchPanelOnline)
+            {
+                try
+                {
+                    //Displays
+                    for (int i = 0; i < this.displays.Count; i++)
+                    {
+                        var index = i;
+                        var display = this.displays[index];
+                        display.OnPowerStateChange += (e) => {
+                            
+                        } 
+                        
+                       
+                    }
+                
+
+                } catch (Exception e)
+                {
+                    Console.WriteLine("Touch Panel is not registered and/or online");
+                }
+            }
+
+                
+
+        
+
+                
+                
 
 
+                _touchpanel.SigChange += _userInterface.InterfaceSigChange;
         }
 
 
-        void AccessData(string args)
+        public SystemConfig LoadJsonConfig(string args)
         {
-            DisplayConfig config = new DisplayConfig();
-
-            Displays display2 = new Displays(config);
-
-            string[] arrayArgs = args.Split(' ');
-            string roomTarget = arrayArgs[0];
-            int roomIndex = -1;
-
-
-
-
-
-        }
-
-
-        void LoadJsonConfig(string args)
-        {
-
+            SystemConfig config = default;
             try
             {
 
-                SystemConfig config = default;
 
-                // using (StreamReader sr = new StreamReader(configfilepath, System.Text.Encoding.Default))
-                // JSONDataAsAString = sr.ReadToEnd();
+                using (StreamReader reader = new StreamReader(configfilepath))
+                {
+                    config = JsonConvert.DeserializeObject<SystemConfig>(reader.ReadToEnd());
+                }
 
-                // Console.WriteLine("JSON data read = {0}", JSONDataAsAString);
             }
-            catch (Exception e)
+            catch (FileNotFoundException e)
             {
-                Console.WriteLine("Error reading JSON data. Error {0}", e.Message);
+                Console.WriteLine("Error reading config file. Error {0}", e.Message);
             }
+
+            return config;
         }
 
     
