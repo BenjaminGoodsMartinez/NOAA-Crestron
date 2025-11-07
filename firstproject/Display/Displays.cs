@@ -1,12 +1,12 @@
-// Displays/SimpleTcpDisplay.cs
+// Displays/Display.cs
 using System;
 using Crestron.SimplSharp; // for TCP/IP in SIMPL#
 using Crestron.SimplSharp.CrestronSockets;
-using firstproject.Display;
 
-namespace firstproject.Displays
+
+namespace firstproject.Display
 {
-  public class SimpleTcpDisplay : DisplayInterface
+  public class Display : DisplayInterface
   {
     public string Name { get; private set; }
     public string Address { get; private set; }
@@ -20,25 +20,24 @@ namespace firstproject.Displays
     private TCPClient _client;
     private readonly byte[] _onCmd = System.Text.Encoding.ASCII.GetBytes("POWER ON\r");
     private readonly byte[] _offCmd = System.Text.Encoding.ASCII.GetBytes("POWER OFF\r");
-    // optionally a query: "POWER?\r"
 
-    public SimpleTcpDisplay(string name, string address, int port)
+    public Display(DisplayConfig config)
     {
-      Name = name;
-      Address = address;
-      Port = port;
+      Name = config.Name;
+      Address = config.Address;
+      Port = config.Port;
       _client = new TCPClient(Address, Port, 2000);
       _client.SocketStatusChange += (o, a) =>
       {
         // optional: log or surface connection changes
       };
-//       _client.ConnectToServerAsync((TCPClient c, SocketStatus s) =>
-// {
-//     if (s == SocketStatus.SOCKET_STATUS_CONNECTED)
-//         CrestronConsole.PrintLine($"{Name} connected to {Address}:{Port}");
-//     else
-//         CrestronConsole.PrintLine($"{Name} connect failed: {s}");
-// });
+      //       _client.ConnectToServerAsync((TCPClient c, SocketStatus s) =>
+      // {
+      //     if (s == SocketStatus.SOCKET_STATUS_CONNECTED)
+      //         CrestronConsole.PrintLine($"{Name} connected to {Address}:{Port}");
+      //     else
+      //         CrestronConsole.PrintLine($"{Name} connect failed: {s}");
+      // });
     }
 
     public bool PowerOn
@@ -66,16 +65,26 @@ namespace firstproject.Displays
     }
 
     private void ConnectCallback(TCPClient client, SocketStatus status)
-{
-  if (status == SocketStatus.SOCKET_STATUS_CONNECTED)
-  {
-    CrestronConsole.PrintLine($"{Name} connected to {Address}:{Port}");
-  }
-  else
-  {
-    CrestronConsole.PrintLine($"{Name} failed to connect: {status}");
-  }
-}
+    {
+
+    }
+
+
+public void Connect()
+        {
+      _client.ConnectToServerAsync((Crestron.SimplSharp.CrestronSockets.TCPClient client) =>
+      {
+        var status = client.ClientStatus;
+        if (status == SocketStatus.SOCKET_STATUS_CONNECTED)
+        {
+          CrestronConsole.PrintLine($"{Name} connected to {Address}:{Port}");
+        }
+        else
+        {
+          CrestronConsole.PrintLine($"{Name} failed to connect: {status}");
+        }
+      });
+        }
 
   }
 }

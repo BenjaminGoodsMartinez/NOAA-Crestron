@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using Crestron.SimplSharp.CrestronIO;
 using Crestron.SimplSharp;                          	// For Basic SIMPL# Classes
 using Crestron.SimplSharpPro;                       	// For Basic SIMPL#Pro classes
 using Crestron.SimplSharpPro.CrestronThread;        	// For Threading
@@ -30,15 +31,16 @@ namespace firstCrestronProject
         private Tsw1070 _touchpanel;
         private UserInterface _userInterface;
         private const uint touchpanelID = 0x03;
+        private SystemConfig _config;
 
         private bool isTouchPanelRegistered = default;
         private bool isTouchPanelOnline = default;
 
         private DmNax16ain MCR_Amplifier;
         string JSONDataAsAString = "";
-        string configfilepath = "./Config.json";
+        string configfilepath = "Config.json";
 
-        private List<Displays> displays = new List<Displays>();
+        private List<Display> displays = new List<Display>();
         //Display Commands
         private string Bravia_DisplayOn = "8C 00 00 02 01 8F";
         private string Bravia_DisplayOff = "8C 00 00 02 01 8E";
@@ -51,7 +53,7 @@ namespace firstCrestronProject
 
             try
             {
-
+                this.LoadJsonConfig();
 
                 Crestron.SimplSharpPro.CrestronThread.Thread.MaxNumberOfUserThreads = 20;
 
@@ -69,9 +71,18 @@ namespace firstCrestronProject
             }
         }
 
+        public void InitializeDisplays()
+        {
+                 //Displays
+                    foreach (var displayInfo in _config.Displays)
+                    {
+                        var display = new Display(displayInfo);
+                        displays.Add(display);
+                        display.Connect();
+                    }
+        }
 
-
-        private void initializeUI ()
+        public void InitializeUI ()
         {
 
             //Check if registered and online
@@ -95,18 +106,7 @@ namespace firstCrestronProject
             {
                 try
                 {
-                    //Displays
-                    for (int i = 0; i < this.displays.Count; i++)
-                    {
-                        var index = i;
-                        var display = this.displays[index];
-                        display.OnPowerStateChange += (e) => {
-                            
-                        } 
-                        
-                       
-                    }
-                
+               
 
                 } catch (Exception e)
                 {
@@ -126,25 +126,27 @@ namespace firstCrestronProject
         }
 
 
-        public SystemConfig LoadJsonConfig(string args)
+        public void LoadJsonConfig()
         {
-            SystemConfig config = default;
             try
             {
-
-
-                using (StreamReader reader = new StreamReader(configfilepath))
+                if (!Crestron.SimplSharp.CrestronIO.File.Exists("Config.json"))
                 {
-                    config = JsonConvert.DeserializeObject<SystemConfig>(reader.ReadToEnd());
+                    CrestronConsole.PrintLine("Config file not found");
+                    return;
                 }
 
+                var json = Crestron.SimplSharp.CrestronIO.File.ReadToEnd(configfilepath, Encoding.Default);
+                    _config = JsonConvert.DeserializeObject<SystemConfig>(json);
+
+
             }
-            catch (FileNotFoundException e)
+            catch (Crestron.SimplSharp.CrestronIO.FileNotFoundException e)
             {
                 Console.WriteLine("Error reading config file. Error {0}", e.Message);
             }
 
-            return config;
+        
         }
 
     
@@ -177,7 +179,7 @@ namespace firstCrestronProject
                 // this.RelayPorts[1]
                 //Change IP address
                 
-
+                
 
 
                 myEISC = new EthernetIntersystemCommunications(0x12, "172.16.0.0", this);
