@@ -58,6 +58,8 @@
     <Compile Include="Display\Displays.cs"/>
     <Compile Include="Display\DisplayPowerState.cs" /> 
     <Compile Include="Display\DisplayInterface.cs" /> 
+    <Compile Include="Decoders\DecoderInterface.cs" />
+    <Compile Include="Encoders\EncoderInterface.cs" />
     <Compile Include="Decoders\Decoders.cs" />
     <Compile Include="Encoders\Encoders.cs" />
     <Compile Include="Config\CodecConfig.cs" />
@@ -66,6 +68,7 @@
     <Compile Include="Config\DisplayConfig.cs" />
     <Compile Include="Config\SystemConfig.cs" />
     <Compile Include="Common\ConnectionStatusChangeEventArgs.cs" />
+    <Compile Include="Common\StreamChangeStatus.cs" />
 
   </ItemGroup>
 

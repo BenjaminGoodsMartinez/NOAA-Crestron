@@ -8,8 +8,8 @@ namespace firstproject.Display
         
 
     string Name { get; }
-    bool PowerOn { get; set; }        // set = send command; get = last known state
-    DisplayPowerState State { get; }   // richer state if you want
+    bool PowerOn { get; set; }        
+    DisplayPowerState State { get; }  
     event Action<DisplayPowerState> OnPowerStateChange;
 
     }

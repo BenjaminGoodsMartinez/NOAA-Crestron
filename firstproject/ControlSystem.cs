@@ -53,7 +53,7 @@ namespace firstCrestronProject
 
             try
             {
-                this.LoadJsonConfig();
+          
 
                 Crestron.SimplSharpPro.CrestronThread.Thread.MaxNumberOfUserThreads = 20;
 
@@ -82,7 +82,42 @@ namespace firstCrestronProject
                     }
         }
 
-        public void InitializeUI ()
+        public List<DmNvxE30> InitializeEncoders(SystemConfig config)
+        {
+            var EncoderArray = new List<DmNvxE30>();
+            try
+            {
+                foreach (var encoderInfo in config.Encoders)
+                {
+                    if (encoderInfo.Model == "E30")
+                    {
+                        // var encoder_tx = new DmNvxE30(encoderInfo.IPID, this);
+
+                        // EncoderArray.Add(encoder_tx);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+
+            }
+
+            return EncoderArray;
+        }
+        
+        public void InitializeDecoders()
+        {
+                        try
+            {
+                
+            } catch (Exception e)
+            {
+                
+            }
+        }
+
+
+        public void InitializeUI()
         {
 
             //Check if registered and online
@@ -95,49 +130,53 @@ namespace firstCrestronProject
                 _touchpanel.Description = "Mission Control Room Touch Panel";
 
                 Console.WriteLine("Mission Control Room Touch Panel is registered and online!\nInitializing Touch Panel Functions...");
-            } else
+            }
+            else
             {
                 Console.WriteLine("There was an issue initializing touch panel");
             }
 
             //Begin to create button/function mappings
-            
+
             if (isTouchPanelOnline && isTouchPanelOnline)
             {
                 try
                 {
-               
 
-                } catch (Exception e)
+
+                }
+                catch (Exception e)
                 {
                     Console.WriteLine("Touch Panel is not registered and/or online");
                 }
             }
 
-                
-
-        
-
-                
-                
 
 
-                _touchpanel.SigChange += _userInterface.InterfaceSigChange;
+
+
+
+
+
+
+            _touchpanel.SigChange += _userInterface.InterfaceSigChange;
         }
 
 
-        public void LoadJsonConfig()
+        public SystemConfig LoadJsonConfig(string path)
         {
+            SystemConfig config = default;
             try
             {
-                if (!Crestron.SimplSharp.CrestronIO.File.Exists("Config.json"))
+                if (!Crestron.SimplSharp.CrestronIO.File.Exists(path))
                 {
                     CrestronConsole.PrintLine("Config file not found");
-                    return;
+                } else
+                {
+                    var json = Crestron.SimplSharp.CrestronIO.File.ReadToEnd(path, Encoding.Default);
+                    config = JsonConvert.DeserializeObject<SystemConfig>(json);                    
                 }
 
-                var json = Crestron.SimplSharp.CrestronIO.File.ReadToEnd(configfilepath, Encoding.Default);
-                    _config = JsonConvert.DeserializeObject<SystemConfig>(json);
 
 
             }
@@ -146,7 +185,7 @@ namespace firstCrestronProject
                 Console.WriteLine("Error reading config file. Error {0}", e.Message);
             }
 
-        
+            return config;
         }
 
     
@@ -175,11 +214,14 @@ namespace firstCrestronProject
 
             try
             {
+
+                var config = this.LoadJsonConfig(this.configfilepath);
+
                 CrestronConsole.PrintLine("NASA AV System Initializing...");
                 // this.RelayPorts[1]
                 //Change IP address
                 
-                
+
 
 
                 myEISC = new EthernetIntersystemCommunications(0x12, "172.16.0.0", this);

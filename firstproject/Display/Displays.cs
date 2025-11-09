@@ -22,7 +22,9 @@ namespace firstproject.Display
     private readonly byte[] _offCmd = System.Text.Encoding.ASCII.GetBytes("POWER OFF\r");
 
     public Display(DisplayConfig config)
+    
     {
+      
       Name = config.Name;
       Address = config.Address;
       Port = config.Port;

@@ -76,15 +76,16 @@
       "icon": "Video Screen"
     }
   ],
-  "Transmitters": [
+  "Encoders": [
     {
     "hardware": "crestron",
     "address": "192.168.2.79",
     "ipid": 32,
     "name": "mcr_lectern",
     "make": "Crestron",
-    "model": "nvxe30",
-    "avisplTag": "TX-01"
+    "model": "E30",
+    "avisplTag": "TX-01",
+    "description" : "Lectern TX"
   },
    {
     "hardware": "crestron",
@@ -92,8 +93,9 @@
     "ipid": 33,
     "name": "PTZ_Camera_1",
     "make": "Crestron",
-    "model": "nvxe30",
-    "avisplTag": "TX-02"
+    "model": "E30",
+    "avisplTag": "TX-02",
+    "description" : "Camera 1"
   },
    {
     "hardware": "crestron",
@@ -101,8 +103,9 @@
     "ipid": 34,
     "name": "PTZ_Camera_2",
     "make": "Crestron",
-    "model": "nvxe30",
-    "avisplTag": "TX-03"
+    "model": "E30",
+    "avisplTag": "TX-03",
+    "description" : "Camera 2"
   },
    {
     "hardware": "crestron",
@@ -110,20 +113,21 @@
     "ipid": 35,
     "name": "PTZ_Camera_3",
     "make": "Crestron",
-    "model": "nvxe30",
-    "avisplTag": "TX-04"
+    "model": "E30",
+    "avisplTag": "TX-04",
+    "description" : "Camera 3"
   }
 
 
 ],
-  "Receivers": [
+  "Decoders": [
     {
     "hardware": "crestron",
     "address": "192.168.2.79",
     "ipid": 32,
     "name": "VideoWall_1",
     "make": "Crestron",
-    "model": "nvxe30",
+    "model": "E30",
     "avisplTag": "RX-01"
   },
    {
@@ -132,7 +136,7 @@
     "ipid": 33,
     "name": "Videowall_2",
     "make": "Crestron",
-    "model": "nvxe30",
+    "model": "E30",
     "avisplTag": "RX-02"
   },
    {
@@ -141,7 +145,7 @@
     "ipid": 34,
     "name": "Videowall_3",
     "make": "Crestron",
-    "model": "nvxe30",
+    "model": "E30",
     "avisplTag": "RX-03"
   },
    {
@@ -150,7 +154,7 @@
     "ipid": 35,
     "name": "Videowall_4",
     "make": "Crestron",
-    "model": "nvxe30",
+    "model": "E30",
     "avisplTag": "RX-04"
   },{
     "hardware": "crestron",
@@ -158,7 +162,7 @@
     "ipid": 36,
     "name": "MCR_DualDisplay_1",
     "make": "Crestron",
-    "model": "nvxe30",
+    "model": "E30",
     "avisplTag": "RX-05"
   },
    {
@@ -167,7 +171,7 @@
     "ipid": 37,
     "name": "MCR_DualDisplay_2",
     "make": "Crestron",
-    "model": "nvxe30",
+    "model": "E30",
     "avisplTag": "RX-06"
   }
 ],
