@@ -13,6 +13,7 @@ using firstCrestronProject;
 using firstproject.Config;
 using firstproject.Display;
 using Crestron.SimplSharpPro.DM.Streaming;
+using firstproject.Audio;
 using Crestron.SimplSharpPro.AudioDistribution;
 using Crestron.SimplSharpPro.EthernetCommunication;
 using Newtonsoft.Json;
@@ -114,12 +115,6 @@ namespace firstCrestronProject
 
                             encoder_tx.Control.EnableAutomaticInputRouting();
                         }
-
-
-
-
-
-
                         EncoderArray.Add(encoder_tx);
                     }
                 }
@@ -168,6 +163,8 @@ namespace firstCrestronProject
             return DecoderArray;
         }
 
+        
+
 
         public void InitializeUI()
         {
@@ -179,6 +176,7 @@ namespace firstCrestronProject
             {
                 isTouchPanelRegistered = true;
                 isTouchPanelOnline = true;
+                _touchpanel.SigChange += InitializeUIActions;
                 _touchpanel.Description = "Mission Control Room Touch Panel";
 
                 Console.WriteLine("Mission Control Room Touch Panel is registered and online!\nInitializing Touch Panel Functions...");
@@ -203,15 +201,6 @@ namespace firstCrestronProject
                 }
             }
 
-
-
-
-
-
-
-
-
-            _touchpanel.SigChange += _userInterface.InterfaceSigChange;
         }
 
 
@@ -244,15 +233,48 @@ namespace firstCrestronProject
 
         public void InitializeUIActions (BasicTriList currentDevice,SigEventArgs args)
         {
+            var config = this.LoadJsonConfig(this.configfilepath);
+            var decoders = InitializeDecoders(config);
+            var displays = InitializeDisplays(config);
+            var encoders = InitializeEncoders(config);
             if (currentDevice == _touchpanel)
             {
-                //Decoders
-                
 
-
-
-
-
+                if (args.Sig.Type == eSigType.Bool && args.Sig.BoolValue == true)
+                {
+                    switch (args.Sig.Number)
+                    {
+                        //DISPLAY POWERS  
+                        case 1:
+                            displays[0].PowerOn = true;
+                            break;
+                        case 2:
+                            displays[0].PowerOn = false;
+                            break;
+                        case 3:
+                            displays[1].PowerOn = true;
+                            break;
+                        case 4:
+                            displays[1].PowerOn = false;
+                            break;
+                        case 5:
+                            displays[2].PowerOn = true;
+                            break;
+                        case 6:
+                            displays[2].PowerOn = false;
+                            break;
+                        case 7:
+                            displays[3].PowerOn = true;
+                            break;
+                        case 8:
+                            displays[3].PowerOn = false;
+                            break;
+                    }
+                }
+                else if (args.Sig.Type == eSigType.String)
+                {   
+                    //ADD decoder multicast address as receivers and sources
+                }
             } else
             {
                 Console.WriteLine("Touch Panel doesn't exist");
@@ -262,6 +284,27 @@ namespace firstCrestronProject
 
 
 
+        public List<DmNax16ain> InitializeAmplifiers (SystemConfig config){
+            List<DmNax16ain> amplifiers = new List<DmNax16ain>();
+
+            foreach (var amp in config.Amplifiers)
+            {
+                if (amp.Model == "NAX16ain")
+                {
+                    DmNax16ain amplifier = new DmNax16ain(amp.IPID, this);
+                    if(amplifier.Register() == eDeviceRegistrationUnRegistrationResponse.Success)
+                    {
+                        amplifiers.Add(amplifier);
+                     
+                    }
+                }
+            }
+
+
+
+
+            return amplifiers;
+        }
 
         /// <summary>
         /// InitializeSystem - this method gets called after the constructor 
@@ -276,97 +319,78 @@ namespace firstCrestronProject
         /// Please be aware that InitializeSystem needs to exit quickly also; 
         /// if it doesn't exit in time, the SIMPL#Pro program will exit.
         /// </summary>
-        public  void InitializeSystem()
+        public void InitializeSystem()
         {
             Task.Run(() =>
             {
-  try
-            {
-
-                var config = this.LoadJsonConfig(this.configfilepath);
-                this.InitializeEncoders(config);
-                this.InitializeUI();
-                var decoders = this.InitializeDecoders(config);
-                var displays = this.InitializeDisplays(config);
-
-                //Displays
-
-                foreach (Display display in displays)
+                try
                 {
 
-                    if (display.Model == "Bravia BZ50L")
+                    var config = this.LoadJsonConfig(this.configfilepath);
+                    this.InitializeEncoders(config);
+                    this.InitializeUI();
+                    var decoders = this.InitializeDecoders(config);
+                    var displays = this.InitializeDisplays(config);
+                    var amplifiers = this.InitializeAmplifiers(config);
+
+
+                    //DISPLAYS
+
+                    foreach (Display display in displays)
                     {
-                        display.PowerOn = true;
-                        display.OnCommand = "*SCPOWR0000000000000000000000000000000000000001";
-                        display.OffCommand = "*SCPOWR0000000000000000000000000000000000000000";
-                        display._onCmd = System.Text.Encoding.ASCII.GetBytes(display.OnCommand);
-                        display._offCmd = System.Text.Encoding.ASCII.GetBytes(display.OffCommand);
-                        display.Connect();
+
+                        if (display.Model == "Bravia BZ50L")
+                        {
+                            display.PowerOn = true;
+                            display.OnCommand = "*SCPOWR0000000000000000000000000000000000000001";
+                            display.OffCommand = "*SCPOWR0000000000000000000000000000000000000000";
+                            display._onCmd = System.Text.Encoding.ASCII.GetBytes(display.OnCommand);
+                            display._offCmd = System.Text.Encoding.ASCII.GetBytes(display.OffCommand);
+                            display.Connect();
+                        }
+                        else if (display.Model == "UR640S")
+                        {
+                            display.PowerOn = true;
+                            display.OnCommand = "ka 00 01\r";
+                            display.OffCommand = "ka 00 00\r";
+                            display._onCmd = System.Text.Encoding.ASCII.GetBytes(display.OnCommand);
+                            display._offCmd = System.Text.Encoding.ASCII.GetBytes(display.OffCommand);
+                            display.Connect();
+                        }
+
+                        displays.Add(display);
                     }
-                    else if (display.Model == "UR640S")
+
+                    
+
+
+
+                    CrestronConsole.PrintLine("NASA AV System Initializing...");
+                 
+
+                    myEISC = new EthernetIntersystemCommunications(0x12, "172.16.0.0", this);
+                    if (myEISC.Register() != eDeviceRegistrationUnRegistrationResponse.Success)
                     {
-                        display.PowerOn = true;
-                        display.OnCommand = "ka 00 01\r";
-                        display.OffCommand = "ka 00 00\r";
-                        display._onCmd = System.Text.Encoding.ASCII.GetBytes(display.OnCommand);
-                        display._offCmd = System.Text.Encoding.ASCII.GetBytes(display.OffCommand);
-                        display.Connect();
+                        CrestronConsole.PrintLine("Error message");
+                    }
+                    else
+                    {
+                        myEISC.OnlineStatusChange += MyEISCOnOnlineStatusChange;
+
+
+                        myEISC.Register();
                     }
 
-                    displays.Add(display);
                 }
-
-
-                //Insert touch panels key registration
-             
-
-
-
-                CrestronConsole.PrintLine("NASA AV System Initializing...");
-                // this.RelayPorts[1]
-                //Change IP address
-
-                myEISC = new EthernetIntersystemCommunications(0x12, "172.16.0.0", this);
-                if (myEISC.Register() != eDeviceRegistrationUnRegistrationResponse.Success)
+                catch (Exception e)
                 {
-                    CrestronConsole.PrintLine("Error message");
+                    ErrorLog.Error("Error in InitializeSystem: {0}", e.Message);
                 }
-                else
-                {
-                    myEISC.SigChange += myEISC_SigChange;
-                    myEISC.OnlineStatusChange += MyEISCOnOnlineStatusChange;
-
-
-                    myEISC.Register();
-                }
-
-            }
-            catch (Exception e)
-            {
-                ErrorLog.Error("Error in InitializeSystem: {0}", e.Message);
-            }
             });
 
-          
+
         }
 
-        private void myEISC_SigChange(BasicTriList currentdevice, SigEventArgs args)
-        {
-            switch (args.Sig.Type)
-            {
-                case eSigType.Bool:
-                    myEISC.BooleanInput[args.Sig.Number].BoolValue = args.Sig.BoolValue;
-                    break;
-                case eSigType.UShort:
-                    myEISC.UShortInput[args.Sig.Number].UShortValue = args.Sig.UShortValue;
-                    break;
-                case eSigType.String:
-                    myEISC.StringInput[args.Sig.Number].StringValue = args.Sig.StringValue;
-                    break;
-                case eSigType.NA:
-                    break;
-            }
-        }
 
 
         private void MyEISCOnOnlineStatusChange(GenericBase currentdevice, OnlineOfflineEventArgs args)

@@ -10,5 +10,7 @@ namespace firstproject.Config
         public List<DisplayConfig> Displays { get; set; }
         public List<EncoderConfig> Encoders { get; set; }
         public List<DecoderConfig> Decoders { get; set; }
+
+        public List <AmplifierConfig> Amplifiers { get; set; }
     }
 }

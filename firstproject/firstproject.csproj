@@ -69,9 +69,11 @@
     <Compile Include="Config\SystemConfig.cs" />
     <Compile Include="Common\ConnectionStatusChangeEventArgs.cs" />
     <Compile Include="Common\StreamChangeStatus.cs" />
+    <Compile Include="Config\AmplifierConfig.cs" />
+    <Compile Include="Audio\Amplifiers.cs" />   
+    <Compile Include="Audio\AmplifiersInterface.cs" />   
 
   </ItemGroup>
-
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>

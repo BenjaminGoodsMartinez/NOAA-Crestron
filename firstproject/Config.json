@@ -76,6 +76,29 @@
       "icon": "Video Screen"
     }
   ],
+
+  "Amplifiers" : [ {
+        "hardware" : "Crestron",
+        "address": "192.168.2.133",
+        "ipid" : 4,
+        "name" : "MCR_AMP",
+        "make" : "Crestron",
+        "model" : "NAX16in",
+        "avispltag" : "AMP-01",
+        "Descrition" : "This is the AMP/DSP for the Mission Control Room"
+  }, {
+        "hardware" : "Crestron",
+        "address": "192.168.2.134",
+        "ipid" : 5,
+        "name" : "MCR_AMP",
+        "make" : "Crestron",
+        "model" : "NAX16in",
+        "avispltag" : "AMP-02",
+        "Descrition" : "This is the AMP/DSP for the Briefing Room"
+  }
+
+
+  ], 
   "Encoders": [
     {
     "hardware": "crestron",
