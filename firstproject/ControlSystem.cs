@@ -21,6 +21,7 @@ using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 
 namespace firstCrestronProject
@@ -241,7 +242,22 @@ namespace firstCrestronProject
         }
 
 
+        public void InitializeUIActions (BasicTriList currentDevice,SigEventArgs args)
+        {
+            if (currentDevice == _touchpanel)
+            {
+                //Decoders
+                
 
+
+
+
+
+            } else
+            {
+                Console.WriteLine("Touch Panel doesn't exist");
+            }
+        }
 
 
 
@@ -260,15 +276,16 @@ namespace firstCrestronProject
         /// Please be aware that InitializeSystem needs to exit quickly also; 
         /// if it doesn't exit in time, the SIMPL#Pro program will exit.
         /// </summary>
-        public override void InitializeSystem()
+        public  void InitializeSystem()
         {
-
-
-            try
+            Task.Run(() =>
+            {
+  try
             {
 
                 var config = this.LoadJsonConfig(this.configfilepath);
-                var encoders = this.InitializeEncoders(config);
+                this.InitializeEncoders(config);
+                this.InitializeUI();
                 var decoders = this.InitializeDecoders(config);
                 var displays = this.InitializeDisplays(config);
 
@@ -301,12 +318,7 @@ namespace firstCrestronProject
 
 
                 //Insert touch panels key registration
-
-
-                foreach(DmNvxE30 tx in encoders)
-                {
-                    
-                }
+             
 
 
 
@@ -333,6 +345,9 @@ namespace firstCrestronProject
             {
                 ErrorLog.Error("Error in InitializeSystem: {0}", e.Message);
             }
+            });
+
+          
         }
 
         private void myEISC_SigChange(BasicTriList currentdevice, SigEventArgs args)
