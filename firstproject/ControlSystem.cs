@@ -53,7 +53,7 @@ namespace firstCrestronProject
 
             try
             {
-          
+
 
                 Crestron.SimplSharpPro.CrestronThread.Thread.MaxNumberOfUserThreads = 20;
 
@@ -71,49 +71,100 @@ namespace firstCrestronProject
             }
         }
 
-        public void InitializeDisplays()
+        public List<Display> InitializeDisplays(SystemConfig config)
         {
-                 //Displays
-                    foreach (var displayInfo in _config.Displays)
-                    {
-                        var display = new Display(displayInfo);
-                        displays.Add(display);
-                        display.Connect();
-                    }
+            var DisplayArray = new List<Display>();
+            //Displays
+            foreach (var displayInfo in config.Displays)
+            {
+
+                var display = new Display(displayInfo);
+                DisplayArray.Add(display);
+                display.Connect();
+            }
+
+
+            return DisplayArray;
         }
 
         public List<DmNvxE30> InitializeEncoders(SystemConfig config)
         {
+
             var EncoderArray = new List<DmNvxE30>();
             try
             {
                 foreach (var encoderInfo in config.Encoders)
                 {
-                    if (encoderInfo.Model == "E30")
+                    int MulticastAddressIndex = 0;
+                    if (encoderInfo.Model == "E30" && encoderInfo.AviSplTag.Substring(0, 2) == "TX")
                     {
-                        // var encoder_tx = new DmNvxE30(encoderInfo.IPID, this);
+                        var encoder_tx = new DmNvxE30(encoderInfo.IPID, this);
 
-                        // EncoderArray.Add(encoder_tx);
+                        if (encoder_tx.IsOnline)
+                        {
+                            Console.WriteLine("Encoder ", encoderInfo.Name, " for ", encoderInfo.Description, "is online..");
+                            encoder_tx.Description = encoderInfo.Description;
+
+                            encoder_tx.Control.DeviceMode = eDeviceMode.Transmitter;
+
+                            encoder_tx.Control.MulticastAddress.StringValue = "239.1.0." + MulticastAddressIndex.ToString();
+
+                            encoder_tx.Control.EnableAutomaticInitiation();
+
+                            encoder_tx.Control.EnableAutomaticInputRouting();
+                        }
+
+
+
+
+
+
+                        EncoderArray.Add(encoder_tx);
                     }
                 }
             }
             catch (Exception e)
             {
-
+                Console.WriteLine("Error reading config\n", e);
             }
 
             return EncoderArray;
         }
-        
-        public void InitializeDecoders()
+
+        public List<DmNvxE30> InitializeDecoders(SystemConfig config)
         {
-                        try
+            var DecoderArray = new List<DmNvxE30>();
+            try
             {
-                
-            } catch (Exception e)
-            {
-                
+                foreach (var DecoderInfo in config.Decoders)
+                {
+                    if (DecoderInfo.Model == "E30" && DecoderInfo.AviSplTag.Substring(0, 2) == "RX")
+                    {
+                        var Decoder_rx = new DmNvxE30(DecoderInfo.IPID, this);
+
+                        if (Decoder_rx.IsOnline && Decoder_rx.Register() == eDeviceRegistrationUnRegistrationResponse.Success)
+                        {
+                            Console.WriteLine("Decoder ", DecoderInfo.Name, " for ", DecoderInfo.Description, "is online..");
+                            Decoder_rx.Description = DecoderInfo.Description;
+
+                            Decoder_rx.Control.EnableAutomaticInitiation();
+                            Decoder_rx.Control.EnableAutomaticInputRouting();
+
+                            Decoder_rx.Control.DeviceMode = eDeviceMode.Receiver;
+
+
+                        }
+
+                        DecoderArray.Add(Decoder_rx);
+                    }
+                }
             }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error reading config\n", e);
+            }
+
+            return DecoderArray;
         }
 
 
@@ -171,10 +222,11 @@ namespace firstCrestronProject
                 if (!Crestron.SimplSharp.CrestronIO.File.Exists(path))
                 {
                     CrestronConsole.PrintLine("Config file not found");
-                } else
+                }
+                else
                 {
                     var json = Crestron.SimplSharp.CrestronIO.File.ReadToEnd(path, Encoding.Default);
-                    config = JsonConvert.DeserializeObject<SystemConfig>(json);                    
+                    config = JsonConvert.DeserializeObject<SystemConfig>(json);
                 }
 
 
@@ -188,10 +240,10 @@ namespace firstCrestronProject
             return config;
         }
 
-    
 
 
-  
+
+
 
 
 
@@ -216,13 +268,51 @@ namespace firstCrestronProject
             {
 
                 var config = this.LoadJsonConfig(this.configfilepath);
+                var encoders = this.InitializeEncoders(config);
+                var decoders = this.InitializeDecoders(config);
+                var displays = this.InitializeDisplays(config);
+
+                //Displays
+
+                foreach (Display display in displays)
+                {
+
+                    if (display.Model == "Bravia BZ50L")
+                    {
+                        display.PowerOn = true;
+                        display.OnCommand = "*SCPOWR0000000000000000000000000000000000000001";
+                        display.OffCommand = "*SCPOWR0000000000000000000000000000000000000000";
+                        display._onCmd = System.Text.Encoding.ASCII.GetBytes(display.OnCommand);
+                        display._offCmd = System.Text.Encoding.ASCII.GetBytes(display.OffCommand);
+                        display.Connect();
+                    }
+                    else if (display.Model == "UR640S")
+                    {
+                        display.PowerOn = true;
+                        display.OnCommand = "ka 00 01\r";
+                        display.OffCommand = "ka 00 00\r";
+                        display._onCmd = System.Text.Encoding.ASCII.GetBytes(display.OnCommand);
+                        display._offCmd = System.Text.Encoding.ASCII.GetBytes(display.OffCommand);
+                        display.Connect();
+                    }
+
+                    displays.Add(display);
+                }
+
+
+                //Insert touch panels key registration
+
+
+                foreach(DmNvxE30 tx in encoders)
+                {
+                    
+                }
+
+
 
                 CrestronConsole.PrintLine("NASA AV System Initializing...");
                 // this.RelayPorts[1]
                 //Change IP address
-                
-
-
 
                 myEISC = new EthernetIntersystemCommunications(0x12, "172.16.0.0", this);
                 if (myEISC.Register() != eDeviceRegistrationUnRegistrationResponse.Success)

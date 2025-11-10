@@ -12,14 +12,19 @@ namespace firstproject.Display
     public string Address { get; private set; }
     public int Port { get; private set; }
 
+    public string Model { get; private set; }
+
+    public string OnCommand { get;  set; }
+    public string OffCommand { get;  set; }
+
     private bool _powerOn;
     public DisplayPowerState State { get; private set; } = DisplayPowerState.Off;
 
     public event Action<DisplayPowerState> OnPowerStateChange;
 
     private TCPClient _client;
-    private readonly byte[] _onCmd = System.Text.Encoding.ASCII.GetBytes("POWER ON\r");
-    private readonly byte[] _offCmd = System.Text.Encoding.ASCII.GetBytes("POWER OFF\r");
+    public byte[] _onCmd = default;
+    public byte[] _offCmd = default;
 
     public Display(DisplayConfig config)
     
@@ -42,7 +47,7 @@ namespace firstproject.Display
       // });
     }
 
-    public bool PowerOn
+    public bool PowerOn 
     {
       get { return _powerOn; }
       set
