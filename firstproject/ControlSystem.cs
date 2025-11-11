@@ -38,8 +38,14 @@ namespace firstCrestronProject
         private bool isTouchPanelRegistered = default;
         private bool isTouchPanelOnline = default;
 
-        private DmNax16ain MCR_Amplifier;
-        string JSONDataAsAString = "";
+
+        private List<DmNvxE30> DecoderArray = new List<DmNvxE30>();
+        private List<DmNvxE30> EncoderArray = new List<DmNvxE30>();
+        private List<DmNax16ain> amplifiers = new List<DmNax16ain>();
+
+       
+        
+        private SystemConfig config = default;
         string configfilepath = "Config.json";
 
         private List<Display> displays = new List<Display>();
@@ -92,12 +98,10 @@ namespace firstCrestronProject
         public List<DmNvxE30> InitializeEncoders(SystemConfig config)
         {
 
-            var EncoderArray = new List<DmNvxE30>();
             try
             {
                 foreach (var encoderInfo in config.Encoders)
                 {
-                    int MulticastAddressIndex = 0;
                     if (encoderInfo.Model == "E30" && encoderInfo.AviSplTag.Substring(0, 2) == "TX")
                     {
                         var encoder_tx = new DmNvxE30(encoderInfo.IPID, this);
@@ -109,7 +113,7 @@ namespace firstCrestronProject
 
                             encoder_tx.Control.DeviceMode = eDeviceMode.Transmitter;
 
-                            encoder_tx.Control.MulticastAddress.StringValue = "239.1.0." + MulticastAddressIndex.ToString();
+                            encoder_tx.Control.MulticastAddress.StringValue = encoderInfo.MulticastAddress;
 
                             encoder_tx.Control.EnableAutomaticInitiation();
 
@@ -129,7 +133,7 @@ namespace firstCrestronProject
 
         public List<DmNvxE30> InitializeDecoders(SystemConfig config)
         {
-            var DecoderArray = new List<DmNvxE30>();
+            
             try
             {
                 foreach (var DecoderInfo in config.Decoders)
@@ -166,47 +170,9 @@ namespace firstCrestronProject
         
 
 
-        public void InitializeUI()
-        {
-
-            //Check if registered and online
-            _touchpanel = new Tsw1070(touchpanelID, this);
-
-            if (_touchpanel.Register() == eDeviceRegistrationUnRegistrationResponse.Success && _touchpanel.IsOnline)
-            {
-                isTouchPanelRegistered = true;
-                isTouchPanelOnline = true;
-                _touchpanel.SigChange += InitializeUIActions;
-                _touchpanel.Description = "Mission Control Room Touch Panel";
-
-                Console.WriteLine("Mission Control Room Touch Panel is registered and online!\nInitializing Touch Panel Functions...");
-            }
-            else
-            {
-                Console.WriteLine("There was an issue initializing touch panel");
-            }
-
-            //Begin to create button/function mappings
-
-            if (isTouchPanelOnline && isTouchPanelOnline)
-            {
-                try
-                {
-
-
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("Touch Panel is not registered and/or online");
-                }
-            }
-
-        }
-
 
         public SystemConfig LoadJsonConfig(string path)
         {
-            SystemConfig config = default;
             try
             {
                 if (!Crestron.SimplSharp.CrestronIO.File.Exists(path))
@@ -233,10 +199,7 @@ namespace firstCrestronProject
 
         public void InitializeUIActions (BasicTriList currentDevice,SigEventArgs args)
         {
-            var config = this.LoadJsonConfig(this.configfilepath);
-            var decoders = InitializeDecoders(config);
-            var displays = InitializeDisplays(config);
-            var encoders = InitializeEncoders(config);
+
             if (currentDevice == _touchpanel)
             {
 
@@ -244,7 +207,7 @@ namespace firstCrestronProject
                 {
                     switch (args.Sig.Number)
                     {
-                        //DISPLAY POWERS  
+                        //DISPLAY POWER
                         case 1:
                             displays[0].PowerOn = true;
                             break;
@@ -272,8 +235,25 @@ namespace firstCrestronProject
                     }
                 }
                 else if (args.Sig.Type == eSigType.String)
-                {   
-                    //ADD decoder multicast address as receivers and sources
+                {
+
+                    //Here is the switch/case logic for setting the multicast address of the encoder to the multicast address of the decoder
+                    switch (args.Sig.Number)
+                    {
+                        case 9:
+                            //4 Display Videowall
+                            DecoderArray[0].Control.MulticastAddress.StringValue = args.Sig.StringValue;
+                            DecoderArray[1].Control.MulticastAddress.StringValue = args.Sig.StringValue;
+                            DecoderArray[2].Control.MulticastAddress.StringValue = args.Sig.StringValue;
+                            DecoderArray[3].Control.MulticastAddress.StringValue = args.Sig.StringValue;
+                            break;
+                        case 10:
+                            DecoderArray[4].Control.MulticastAddress.StringValue = args.Sig.StringValue;
+                            break;
+                        case 11:
+                            DecoderArray[5].Control.MulticastAddress.StringValue = args.Sig.StringValue;
+                            break;
+                    }
                 }
             } else
             {
@@ -285,7 +265,7 @@ namespace firstCrestronProject
 
 
         public List<DmNax16ain> InitializeAmplifiers (SystemConfig config){
-            List<DmNax16ain> amplifiers = new List<DmNax16ain>();
+            
 
             foreach (var amp in config.Amplifiers)
             {
@@ -326,40 +306,44 @@ namespace firstCrestronProject
                 try
                 {
 
-                    var config = this.LoadJsonConfig(this.configfilepath);
+                    this.config = this.LoadJsonConfig(this.configfilepath);
                     this.InitializeEncoders(config);
-                    this.InitializeUI();
-                    var decoders = this.InitializeDecoders(config);
-                    var displays = this.InitializeDisplays(config);
-                    var amplifiers = this.InitializeAmplifiers(config);
+
+                    this.InitializeDecoders(config);
+                    this.InitializeDisplays(config);
+                    this.InitializeAmplifiers(config);
+
+            //Check if registered and online
+            _touchpanel = new Tsw1070(touchpanelID, this);
+
+            if (_touchpanel.Register() == eDeviceRegistrationUnRegistrationResponse.Success && _touchpanel.IsOnline)
+            {
+                isTouchPanelRegistered = true;
+                isTouchPanelOnline = true;
+                _touchpanel.SigChange += InitializeUIActions;
+                _touchpanel.Description = "Mission Control Room Touch Panel";
+
+                Console.WriteLine("Mission Control Room Touch Panel is registered and online!\nInitializing Touch Panel Functions...");
+            }
+            else
+            {
+                Console.WriteLine("There was an issue initializing touch panel");
+            }
+
+            //Begin to create button/function mappings
+
+            if (isTouchPanelOnline && isTouchPanelOnline)
+            {
+                try
+                {
 
 
-                    //DISPLAYS
-
-                    foreach (Display display in displays)
-                    {
-
-                        if (display.Model == "Bravia BZ50L")
-                        {
-                            display.PowerOn = true;
-                            display.OnCommand = "*SCPOWR0000000000000000000000000000000000000001";
-                            display.OffCommand = "*SCPOWR0000000000000000000000000000000000000000";
-                            display._onCmd = System.Text.Encoding.ASCII.GetBytes(display.OnCommand);
-                            display._offCmd = System.Text.Encoding.ASCII.GetBytes(display.OffCommand);
-                            display.Connect();
-                        }
-                        else if (display.Model == "UR640S")
-                        {
-                            display.PowerOn = true;
-                            display.OnCommand = "ka 00 01\r";
-                            display.OffCommand = "ka 00 00\r";
-                            display._onCmd = System.Text.Encoding.ASCII.GetBytes(display.OnCommand);
-                            display._offCmd = System.Text.Encoding.ASCII.GetBytes(display.OffCommand);
-                            display.Connect();
-                        }
-
-                        displays.Add(display);
-                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Touch Panel is not registered and/or online");
+                }
+            }
 
                     
 

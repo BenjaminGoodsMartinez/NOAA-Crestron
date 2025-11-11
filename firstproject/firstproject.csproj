@@ -71,7 +71,12 @@
     <Compile Include="Common\StreamChangeStatus.cs" />
     <Compile Include="Config\AmplifierConfig.cs" />
     <Compile Include="Audio\Amplifiers.cs" />   
-    <Compile Include="Audio\AmplifiersInterface.cs" />   
+    <Compile Include="Audio\AmplifiersInterface.cs" /> 
+    <Compile Include="Cameras\Cameras.cs"/>  
+    <Compile Include="Cameras\CamerasInterface.cs"/>
+    <Compile Include="Config\CameraConfig.cs"/>  
+  
+
 
   </ItemGroup>
   <ItemGroup>

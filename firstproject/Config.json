@@ -103,6 +103,7 @@
     {
     "hardware": "crestron",
     "address": "192.168.2.79",
+    "multicastaddress" : "239.1.0.1",
     "ipid": 32,
     "name": "mcr_lectern",
     "make": "Crestron",
@@ -113,6 +114,7 @@
    {
     "hardware": "crestron",
     "address": "192.168.2.79",
+     "multicastaddress" : "239.1.0.2",
     "ipid": 33,
     "name": "PTZ_Camera_1",
     "make": "Crestron",
@@ -123,6 +125,7 @@
    {
     "hardware": "crestron",
     "address": "192.168.2.79",
+     "multicastaddress" : "239.1.0.3",
     "ipid": 34,
     "name": "PTZ_Camera_2",
     "make": "Crestron",
@@ -133,14 +136,38 @@
    {
     "hardware": "crestron",
     "address": "192.168.2.79",
+     "multicastaddress" : "239.1.0.4",
     "ipid": 35,
     "name": "PTZ_Camera_3",
     "make": "Crestron",
     "model": "E30",
     "avisplTag": "TX-04",
     "description" : "Camera 3"
+    
+  },       
+   {
+    "hardware": "crestron",
+    "address": "192.168.2.79",
+    "multicastaddress" : "239.1.0.5",
+    "ipid": 36,
+    "name": "mcr_pc",
+    "make": "Crestron",
+    "model": "E30",
+    "avisplTag": "TX-05",
+    "description" : "PC TX"
   }
-
+,       
+   {
+    "hardware": "crestron",
+    "address": "192.168.2.79",
+    "multicastaddress" : "239.1.0.6",
+    "ipid": 37,
+    "name": "mcr_pc",
+    "make": "Crestron",
+    "model": "E30",
+    "avisplTag": "TX-06",
+    "description" : "HDMI Out TX"
+  }
 
 ],
   "Decoders": [

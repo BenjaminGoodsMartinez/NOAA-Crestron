@@ -12,6 +12,8 @@
         public uint IPID { get; set; }
 
         public string Description { get; set; }
+
+        public string MulticastAddress { get; set; }
     }
 }    
 
