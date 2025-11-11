@@ -23,6 +23,8 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Reflection;
+using firstproject.Cameras;
 
 
 namespace firstCrestronProject
@@ -31,27 +33,19 @@ namespace firstCrestronProject
     {
         private EthernetIntersystemCommunications myEISC;
         private Tsw1070 _touchpanel;
-        private UserInterface _userInterface;
         private const uint touchpanelID = 0x03;
-        private SystemConfig _config;
-
-        private bool isTouchPanelRegistered = default;
-        private bool isTouchPanelOnline = default;
 
 
         private List<DmNvxE30> DecoderArray = new List<DmNvxE30>();
         private List<DmNvxE30> EncoderArray = new List<DmNvxE30>();
-        private List<DmNax16ain> amplifiers = new List<DmNax16ain>();
+        private List<DmNax8Zsa> AmplifierArray = new List<DmNax8Zsa>();
 
+        private List<Display> DisplayArray = new List<Display>();
+        private List<Cameras> CameraArray = new List<Cameras>();
        
         
         private SystemConfig config = default;
         string configfilepath = "Config.json";
-
-        private List<Display> displays = new List<Display>();
-        //Display Commands
-        private string Bravia_DisplayOn = "8C 00 00 02 01 8F";
-        private string Bravia_DisplayOff = "8C 00 00 02 01 8E";
 
 
 
@@ -71,7 +65,6 @@ namespace firstCrestronProject
                 CrestronEnvironment.EthernetEventHandler += new EthernetEventHandler(_ControllerEthernetEventHandler);
 
 
-
             }
             catch (Exception e)
             {
@@ -79,9 +72,8 @@ namespace firstCrestronProject
             }
         }
 
-        public List<Display> InitializeDisplays(SystemConfig config)
+        public void InitializeDisplays()
         {
-            var DisplayArray = new List<Display>();
             //Displays
             foreach (var displayInfo in config.Displays)
             {
@@ -91,11 +83,34 @@ namespace firstCrestronProject
                 display.Connect();
             }
 
-
-            return DisplayArray;
         }
 
-        public List<DmNvxE30> InitializeEncoders(SystemConfig config)
+        public void InitializeCameras ()
+        {
+            try
+            {
+                foreach(var cameraInfo in config.Cameras)
+                {
+                    var camera = new Cameras(cameraInfo);
+                    if (camera.IsOnline())
+                    {
+                        CameraArray.Add(camera);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Camera is not online");
+                    }
+                }                
+
+
+            } catch (Exception e)
+            {
+                Console.WriteLine("Error initializing cameras: \n", e);
+            }
+        }
+
+
+        public void InitializeEncoders()
         {
 
             try
@@ -127,11 +142,9 @@ namespace firstCrestronProject
             {
                 Console.WriteLine("Error reading config\n", e);
             }
-
-            return EncoderArray;
         }
 
-        public List<DmNvxE30> InitializeDecoders(SystemConfig config)
+        public void InitializeDecoders()
         {
             
             try
@@ -163,8 +176,6 @@ namespace firstCrestronProject
             {
                 Console.WriteLine("Error reading config\n", e);
             }
-
-            return DecoderArray;
         }
 
         
@@ -196,7 +207,7 @@ namespace firstCrestronProject
             return config;
         }
 
-
+        
         public void InitializeUIActions (BasicTriList currentDevice,SigEventArgs args)
         {
 
@@ -207,31 +218,56 @@ namespace firstCrestronProject
                 {
                     switch (args.Sig.Number)
                     {
-                        //DISPLAY POWER
+                        //Display Power Control
                         case 1:
-                            displays[0].PowerOn = true;
+                            DisplayArray[0].PowerOn = true;
                             break;
                         case 2:
-                            displays[0].PowerOn = false;
+                            DisplayArray[0].PowerOn = false;
                             break;
                         case 3:
-                            displays[1].PowerOn = true;
+                            DisplayArray[1].PowerOn = true;
                             break;
                         case 4:
-                            displays[1].PowerOn = false;
+                            DisplayArray[1].PowerOn = false;
                             break;
                         case 5:
-                            displays[2].PowerOn = true;
+                            DisplayArray[2].PowerOn = true;
                             break;
                         case 6:
-                            displays[2].PowerOn = false;
+                            DisplayArray[2].PowerOn = false;
                             break;
                         case 7:
-                            displays[3].PowerOn = true;
+                            DisplayArray[3].PowerOn = true;
                             break;
                         case 8:
-                            displays[3].PowerOn = false;
+                            DisplayArray[3].PowerOn = false;
                             break;
+
+                        //Audio Mute Function
+                        case 9:
+                            //Program audio
+                            EncoderArray[0].Control.AudioMute();
+                            break;
+                        case 10:
+                            EncoderArray[0].Control.AudioUnmute();
+                            break;
+                            //PC Audio
+                        case 11:
+                            EncoderArray[6].Control.AudioMute();
+                            break;
+                        case 12:
+                            EncoderArray[6].Control.AudioUnmute();
+                            break;
+                        //Mute All Speakers
+                        case 17:
+                            for (uint Index = 0; Index < AmplifierArray[0].Zones.Count; Index++)
+                            {
+                                AmplifierArray[0].Zones[Index].MuteOn();
+                            }
+                            break;
+                            
+                        
                     }
                 }
                 else if (args.Sig.Type == eSigType.String)
@@ -240,50 +276,52 @@ namespace firstCrestronProject
                     //Here is the switch/case logic for setting the multicast address of the encoder to the multicast address of the decoder
                     switch (args.Sig.Number)
                     {
-                        case 9:
+                        case 30:
                             //4 Display Videowall
                             DecoderArray[0].Control.MulticastAddress.StringValue = args.Sig.StringValue;
                             DecoderArray[1].Control.MulticastAddress.StringValue = args.Sig.StringValue;
                             DecoderArray[2].Control.MulticastAddress.StringValue = args.Sig.StringValue;
                             DecoderArray[3].Control.MulticastAddress.StringValue = args.Sig.StringValue;
                             break;
-                        case 10:
+                        case 31:
                             DecoderArray[4].Control.MulticastAddress.StringValue = args.Sig.StringValue;
                             break;
-                        case 11:
+                        case 32:
                             DecoderArray[5].Control.MulticastAddress.StringValue = args.Sig.StringValue;
                             break;
                     }
                 }
-            } else
+            } else if (args.Sig.Type == eSigType.UShort)
             {
-                Console.WriteLine("Touch Panel doesn't exist");
+                switch (args.Sig.Number)
+                {
+                    case 20:
+                        EncoderArray[0].Control.AnalogAudioOutputVolume.UShortValue = args.Sig.UShortValue;
+                        break;
+                    case 21:
+                        EncoderArray[6].Control.AnalogAudioOutputVolume.UShortValue = args.Sig.UShortValue;
+                        break;
+                }
             }
         }
 
 
 
 
-        public List<DmNax16ain> InitializeAmplifiers (SystemConfig config){
+        public void InitializeAmplifiers (SystemConfig config){
             
 
             foreach (var amp in config.Amplifiers)
             {
-                if (amp.Model == "NAX16ain")
+                if (amp.Model == "Nax8Zsa")
                 {
-                    DmNax16ain amplifier = new DmNax16ain(amp.IPID, this);
+                    DmNax8Zsa amplifier = new DmNax8Zsa(amp.IPID, this);
                     if(amplifier.Register() == eDeviceRegistrationUnRegistrationResponse.Success)
                     {
-                        amplifiers.Add(amplifier);
-                     
+                        AmplifierArray.Add(amplifier);
                     }
                 }
             }
-
-
-
-
-            return amplifiers;
         }
 
         /// <summary>
@@ -307,10 +345,10 @@ namespace firstCrestronProject
                 {
 
                     this.config = this.LoadJsonConfig(this.configfilepath);
-                    this.InitializeEncoders(config);
-
-                    this.InitializeDecoders(config);
-                    this.InitializeDisplays(config);
+                    this.InitializeEncoders();
+                    this.InitializeCameras();
+                    this.InitializeDecoders();
+                    this.InitializeDisplays();
                     this.InitializeAmplifiers(config);
 
             //Check if registered and online
@@ -318,8 +356,6 @@ namespace firstCrestronProject
 
             if (_touchpanel.Register() == eDeviceRegistrationUnRegistrationResponse.Success && _touchpanel.IsOnline)
             {
-                isTouchPanelRegistered = true;
-                isTouchPanelOnline = true;
                 _touchpanel.SigChange += InitializeUIActions;
                 _touchpanel.Description = "Mission Control Room Touch Panel";
 
@@ -332,11 +368,10 @@ namespace firstCrestronProject
 
             //Begin to create button/function mappings
 
-            if (isTouchPanelOnline && isTouchPanelOnline)
+            if (_touchpanel.IsOnline)
             {
                 try
                 {
-
 
                 }
                 catch (Exception e)
@@ -344,10 +379,6 @@ namespace firstCrestronProject
                     Console.WriteLine("Touch Panel is not registered and/or online");
                 }
             }
-
-                    
-
-
 
                     CrestronConsole.PrintLine("NASA AV System Initializing...");
                  
@@ -371,7 +402,6 @@ namespace firstCrestronProject
                     ErrorLog.Error("Error in InitializeSystem: {0}", e.Message);
                 }
             });
-
 
         }
 
