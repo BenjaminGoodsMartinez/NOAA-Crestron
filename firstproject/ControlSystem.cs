@@ -100,9 +100,7 @@ namespace firstCrestronProject
                     {
                         Console.WriteLine("Camera is not online");
                     }
-                }                
-
-
+                }               
             } catch (Exception e)
             {
                 Console.WriteLine("Error initializing cameras: \n", e);
@@ -112,18 +110,18 @@ namespace firstCrestronProject
 
         public void InitializeEncoders()
         {
-
             try
             {
                 foreach (var encoderInfo in config.Encoders)
-                {
-                    if (encoderInfo.Model == "E30" && encoderInfo.AviSplTag.Substring(0, 2) == "TX")
+                { 
+                    if (encoderInfo.Model == "E30" && encoderInfo.AviSplTag.StartsWith("TX"))
                     {
                         var encoder_tx = new DmNvxE30(encoderInfo.IPID, this);
 
                         if (encoder_tx.IsOnline)
                         {
                             Console.WriteLine("Encoder ", encoderInfo.Name, " for ", encoderInfo.Description, "is online..");
+
                             encoder_tx.Description = encoderInfo.Description;
 
                             encoder_tx.Control.DeviceMode = eDeviceMode.Transmitter;
