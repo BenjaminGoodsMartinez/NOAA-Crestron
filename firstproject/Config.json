@@ -40,6 +40,23 @@
       "icon": "Camera"
     }
   ],
+
+  "cameras": [
+    {
+      "name": "DirectorCamera",
+      "model": "SRG-X40UH",
+      "address": "192.168.2.180",
+      "ipid": 44,
+      "description": "Director / Operator view"
+    },
+    {
+      "name": "AudienceCamera",
+      "model": "SRG-X120",
+      "address": "192.168.2.181",
+      "ipid": 45,
+      "description": "Audience view"
+    }
+  ],
   "sources": [
     {
       "label": "Lectern",

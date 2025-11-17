@@ -36,10 +36,6 @@ namespace firstproject.Cameras
             this.Port = config.Port;
             this.IPID = config.IPID;
 
-
-
-
-
         }
 
         public void SendCommand(string command)
