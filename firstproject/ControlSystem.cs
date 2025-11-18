@@ -34,16 +34,11 @@ namespace firstCrestronProject
         private EthernetIntersystemCommunications myEISC;
         private Tsw1070 _touchpanel;
         private const uint touchpanelID = 0x03;
-
-
         private List<DmNvxE30> DecoderArray = new List<DmNvxE30>();
         private List<DmNvxE30> EncoderArray = new List<DmNvxE30>();
         private List<DmNax8Zsa> AmplifierArray = new List<DmNax8Zsa>();
-
         private List<Display> DisplayArray = new List<Display>();
         private List<Cameras> CameraArray = new List<Cameras>();
-       
-        
         private SystemConfig config = default;
         string configfilepath = "Config.json";
 
@@ -55,10 +50,7 @@ namespace firstCrestronProject
 
             try
             {
-
-
                 Crestron.SimplSharpPro.CrestronThread.Thread.MaxNumberOfUserThreads = 20;
-
                 //Subscribe to the controller events (System, Program, and Ethernet)
                 CrestronEnvironment.SystemEventHandler += new SystemEventHandler(_ControllerSystemEventHandler);
                 CrestronEnvironment.ProgramStatusEventHandler += new ProgramStatusEventHandler(_ControllerProgramEventHandler);
@@ -206,7 +198,7 @@ namespace firstCrestronProject
         }
 
         
-        public void InitializeUIActions (BasicTriList currentDevice,SigEventArgs args)
+        public void InitializeUIActions (BasicTriList currentDevice, SigEventArgs args)
         {
 
             if (currentDevice == _touchpanel)
@@ -276,17 +268,78 @@ namespace firstCrestronProject
                     {
                         case 30:
                             //4 Display Videowall
-                            DecoderArray[0].Control.MulticastAddress.StringValue = args.Sig.StringValue;
-                            DecoderArray[1].Control.MulticastAddress.StringValue = args.Sig.StringValue;
-                            DecoderArray[2].Control.MulticastAddress.StringValue = args.Sig.StringValue;
-                            DecoderArray[3].Control.MulticastAddress.StringValue = args.Sig.StringValue;
+                        DecoderArray[0].Control.MulticastAddress.StringValue = args.Sig.StringValue;
+                        DecoderArray[1].Control.MulticastAddress.StringValue = args.Sig.StringValue;
+                        DecoderArray[2].Control.MulticastAddress.StringValue = args.Sig.StringValue;
+                        DecoderArray[3].Control.MulticastAddress.StringValue = args.Sig.StringValue;
                             break;
                         case 31:
-                            DecoderArray[4].Control.MulticastAddress.StringValue = args.Sig.StringValue;
+                        DecoderArray[4].Control.MulticastAddress.StringValue = args.Sig.StringValue;
                             break;
                         case 32:
-                            DecoderArray[5].Control.MulticastAddress.StringValue = args.Sig.StringValue;
+                        DecoderArray[5].Control.MulticastAddress.StringValue = args.Sig.StringValue;
                             break;
+                        //Camera 1 Direction Controls
+                        case 12:
+                        CameraArray[0].SendCommand(args.Sig.StringValue); // Camera 1 up
+                            break;
+                        case 13:
+                        CameraArray[0].SendCommand(args.Sig.StringValue); //  Camera 1 down
+                            break;
+                        case 14:
+                        CameraArray[0].SendCommand(args.Sig.StringValue); // Camera 1 left
+                            break;
+                        case 15:
+                        CameraArray[0].SendCommand(args.Sig.StringValue); // Camera 1 right
+                            break;
+                        //Camera 2 Direction Controls
+                        case 16:
+                        CameraArray[1].SendCommand(args.Sig.StringValue); // Camera 2 up     
+                            break;
+                        case 17:
+                        CameraArray[1].SendCommand(args.Sig.StringValue); // Camera 2 down            
+                            break;
+                        case 18:
+                        CameraArray[1].SendCommand(args.Sig.StringValue); // Camera 2 left       
+                            break;
+                        case 19:
+                        CameraArray[1].SendCommand(args.Sig.StringValue); // Camera 2 right
+                            break;
+                        case 20:
+                        CameraArray[2].SendCommand(args.Sig.StringValue); //Camera 3 Up
+                            break;
+                        case 21:
+                        CameraArray[2].SendCommand(args.Sig.StringValue); //Camera 3 down
+                            break;
+                        case 22:
+                        CameraArray[2].SendCommand(args.Sig.StringValue); //Camera 3 left
+                            break;
+                        case 23:
+                        CameraArray[2].SendCommand(args.Sig.StringValue); // Camera 3 right
+                            break;
+                        // Camera Presets Controls
+                        case 24:
+                        CameraArray[0].SendCommand(args.Sig.StringValue); // Camera 1 Preset 1
+                            break;
+                        case 25:
+                        CameraArray[0].SendCommand(args.Sig.StringValue); // Camera 1 Preset 2
+                            break;
+                        case 26:
+                        CameraArray[1].SendCommand(args.Sig.StringValue); // Camera 2 Preset 1
+                            break;
+                        case 27:
+                        CameraArray[1].SendCommand(args.Sig.StringValue); // Camera 2 Preset 2
+                            break;                                                    
+                        case 28:
+                        CameraArray[2].SendCommand(args.Sig.StringValue); // Camera 3 Preset 1
+                            break;
+                        case 29:
+                        CameraArray[2].SendCommand(args.Sig.StringValue); // Camera 3 Preset 2
+                            break;
+
+
+
+                        
                     }
                 }
             } else if (args.Sig.Type == eSigType.UShort)
@@ -302,13 +355,7 @@ namespace firstCrestronProject
                 }
             }
         }
-
-
-
-
         public void InitializeAmplifiers (SystemConfig config){
-            
-
             foreach (var amp in config.Amplifiers)
             {
                 if (amp.Model == "Nax8Zsa")
@@ -321,20 +368,6 @@ namespace firstCrestronProject
                 }
             }
         }
-
-        /// <summary>
-        /// InitializeSystem - this method gets called after the constructor 
-        /// has finished. 
-        /// 
-        /// Use InitializeSystem to:
-        /// * Start threads
-        /// * Configure ports, such as serial and verisports
-        /// * Start and initialize socket connections
-        /// Send initial device configurations
-        /// 
-        /// Please be aware that InitializeSystem needs to exit quickly also; 
-        /// if it doesn't exit in time, the SIMPL#Pro program will exit.
-        /// </summary>
         public void InitializeSystem()
         {
             Task.Run(() =>
@@ -342,12 +375,14 @@ namespace firstCrestronProject
                 try
                 {
 
+
                     this.config = this.LoadJsonConfig(this.configfilepath);
                     this.InitializeEncoders();
                     this.InitializeCameras();
                     this.InitializeDecoders();
                     this.InitializeDisplays();
                     this.InitializeAmplifiers(config);
+                    //this.InitializeUIActions(_touchpanel);
 
             //Check if registered and online
             _touchpanel = new Tsw1070(touchpanelID, this);
@@ -356,16 +391,13 @@ namespace firstCrestronProject
             {
                 _touchpanel.SigChange += InitializeUIActions;
                 _touchpanel.Description = "Mission Control Room Touch Panel";
-
                 Console.WriteLine("Mission Control Room Touch Panel is registered and online!\nInitializing Touch Panel Functions...");
             }
             else
             {
                 Console.WriteLine("There was an issue initializing touch panel");
             }
-
             //Begin to create button/function mappings
-
             if (_touchpanel.IsOnline)
             {
                 try
@@ -379,8 +411,7 @@ namespace firstCrestronProject
             }
 
                     CrestronConsole.PrintLine("NASA AV System Initializing...");
-                 
-
+                
                     myEISC = new EthernetIntersystemCommunications(0x12, "172.16.0.0", this);
                     if (myEISC.Register() != eDeviceRegistrationUnRegistrationResponse.Success)
                     {
@@ -400,10 +431,7 @@ namespace firstCrestronProject
                     ErrorLog.Error("Error in InitializeSystem: {0}", e.Message);
                 }
             });
-
         }
-
-
 
         private void MyEISCOnOnlineStatusChange(GenericBase currentdevice, OnlineOfflineEventArgs args)
         {
