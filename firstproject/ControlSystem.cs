@@ -338,7 +338,13 @@ namespace firstCrestronProject
                         case 29:
                         CameraArray[2].SendCommand(args.Sig.StringValue); // Camera 3 Preset 2
                             break;
-
+                        //Handheld and Lavalier Microphone Levels
+                        case 40:
+                        MicrophoneArray[0].SendCommand(args.Sig.StringValue);
+                        break;
+                        case 41:
+                        MicrophoneArray[1].SendCommand(args.Sig.StringValue);
+                        break;
 
 
                         
