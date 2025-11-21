@@ -39,7 +39,9 @@ namespace firstCrestronProject
         private List<DmNax8Zsa> AmplifierArray = new List<DmNax8Zsa>();
         private List<Display> DisplayArray = new List<Display>();
         private List<Cameras> CameraArray = new List<Cameras>();
+        private List<Microphones> MicrophoneArray = new List<Microphones>();
         private SystemConfig config = default;
+        private MicrophoneConfig mConfig = default;
         string configfilepath = "Config.json";
 
 
@@ -278,7 +280,7 @@ namespace firstCrestronProject
                             break;
                         case 32:
                         DecoderArray[5].Control.MulticastAddress.StringValue = args.Sig.StringValue;
-                            break;
+                            break; 
                         //Camera 1 Direction Controls
                         case 12:
                         CameraArray[0].SendCommand(args.Sig.StringValue); // Camera 1 up
@@ -368,20 +370,42 @@ namespace firstCrestronProject
                 }
             }
         }
+
+
+        public void InitializeAnalogMicrophones (SystemConfig config)
+        {
+            
+            foreach (var microphone in config.Microphones)
+            {
+                if(microphone.Model == "Shure")
+                {
+                    Microphones mPhone = new firstproject.Audio.Microphones(mConfig);
+                    if (mPhone.IsOnline())
+                    {
+                        MicrophoneArray.Add(mPhone);
+                    }
+                    {                
+                    }
+                }
+            }
+        }
+
+
         public void InitializeSystem()
         {
             Task.Run(() =>
             {
                 try
                 {
-
-
                     this.config = this.LoadJsonConfig(this.configfilepath);
                     this.InitializeEncoders();
                     this.InitializeCameras();
                     this.InitializeDecoders();
                     this.InitializeDisplays();
+                    this.InitializeAnalogMicrophones(config);
                     this.InitializeAmplifiers(config);
+
+                    
                     //this.InitializeUIActions(_touchpanel);
 
             //Check if registered and online

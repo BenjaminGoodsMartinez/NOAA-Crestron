@@ -67,11 +67,13 @@
     <Compile Include="Config\EncoderConfig.cs" />
     <Compile Include="Config\DisplayConfig.cs" />
     <Compile Include="Config\SystemConfig.cs" />
+    <Compile Include="Config\MicrophoneConfig.cs" />
     <Compile Include="Common\ConnectionStatusChangeEventArgs.cs" />
     <Compile Include="Common\StreamChangeStatus.cs" />
     <Compile Include="Config\AmplifierConfig.cs" />
     <Compile Include="Audio\Amplifiers.cs" />   
     <Compile Include="Audio\AmplifiersInterface.cs" /> 
+    <Compile Include="Audio\Microphones.cs" />
     <Compile Include="Cameras\Cameras.cs"/>  
     <Compile Include="Cameras\CamerasInterface.cs"/>
     <Compile Include="Config\CameraConfig.cs"/>  

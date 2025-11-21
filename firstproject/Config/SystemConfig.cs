@@ -12,5 +12,6 @@ namespace firstproject.Config
         public List<DecoderConfig> Decoders { get; set; }
         public List <CameraConfig> Cameras { get; set; }
         public List <AmplifierConfig> Amplifiers { get; set; }
+        public List <MicrophoneConfig> Microphones {get;set;}
     }
 }

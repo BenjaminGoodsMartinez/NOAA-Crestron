@@ -2,7 +2,7 @@
 using firstproject.Config;
 namespace firstproject.Audio
 {
-    public class Amplifiers : AmplifierInterface
+    public class Amplifiers
     {
         public string Descrition { get; set; }
         public string Name { get; set; }
@@ -12,7 +12,7 @@ namespace firstproject.Audio
 
         public Amplifiers (AmplifierConfig config)
         {
-      
+            
 
 
 
